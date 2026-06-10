@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinguaLanes Spanish</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="side-nav" aria-label="Main navigation">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">LL</div>
+          <div>
+            <strong>LinguaLanes</strong>
+            <span>Spanish paths</span>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="Learning sections">
+          <button class="nav-item active" type="button" data-view="learn">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V5.7C4 4.8 4.8 4 5.7 4h12.6c.9 0 1.7.8 1.7 1.7v13.8l-8-3.3-8 3.3Z" /></svg>
+            Learn
+          </button>
+          <button class="nav-item" type="button" data-view="practice">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9h-3a6 6 0 1 1-6-6V3Zm1 0v10h8A9 9 0 0 0 13 3Z" /></svg>
+            Practice
+          </button>
+          <button class="nav-item" type="button" data-view="phrasebook">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4Zm3 3v2h8V7H8Zm0 4v2h8v-2H8Zm0 4v2h6v-2H8Z" /></svg>
+            Phrasebook
+          </button>
+        </nav>
+
+        <div class="daily-card">
+          <span class="mini-label">Daily goal</span>
+          <strong><span id="goal-count">0</span>/5</strong>
+          <div class="small-progress" aria-hidden="true"><span id="goal-fill"></span></div>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="top-bar">
+          <div>
+            <p class="eyebrow">Hear it, say it, type it</p>
+            <h1>Learn Spanish from beginner to advanced</h1>
+          </div>
+          <div class="stats" aria-label="Learning stats">
+            <div class="stat-pill" title="Current streak">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2s1 4-2 7c-2 2-3 4-2 6a3 3 0 0 0 6 0c0-2-2-3-1-6 3 2 5 5 5 8a7 7 0 0 1-14 0C5 10 12 8 13 2Z" /></svg>
+              <span id="streak">1</span>
+            </div>
+            <div class="stat-pill" title="Experience points">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.9 6 6.6 1-4.8 4.6 1.1 6.5L12 17l-5.8 3.1 1.1-6.5L2.5 9l6.6-1L12 2Z" /></svg>
+              <span id="xp">0 XP</span>
+            </div>
+            <div class="stat-pill" title="Hearts remaining">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8-4.9-8-11a4.8 4.8 0 0 1 8-3.6A4.8 4.8 0 0 1 20 10c0 6.1-8 11-8 11Z" /></svg>
+              <span id="hearts">5</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="view active" id="learn-view" aria-label="Learn">
+          <div class="category-strip" id="category-strip"></div>
+
+          <section class="lesson-layout">
+            <div class="path-panel">
+              <div class="path-heading">
+                <div>
+                  <span class="mini-label" id="current-topic-label">Sports Spanish</span>
+                  <h2 id="current-topic-title">On the field</h2>
+                </div>
+                <button class="icon-button" id="reset-progress" type="button" title="Reset progress" aria-label="Reset progress">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h9a5 5 0 1 1-4.7 6.8l1.9-.7A3 3 0 1 0 15 9H6v3L2 8l4-4v3Z" /></svg>
+                </button>
+              </div>
+              <div class="lesson-path" id="lesson-path" aria-label="Lesson path"></div>
+            </div>
+
+            <div class="coach-panel">
+              <div class="coach-art" aria-hidden="true">
+                <div class="face">
+                  <span></span>
+                  <span></span>
+                  <i></i>
+                </div>
+                <div class="bubble one"></div>
+                <div class="bubble two"></div>
+              </div>
+              <div>
+                <span class="mini-label">Coach tip</span>
+                <h2 id="coach-title">Start with commands</h2>
+                <p id="coach-copy">Start with single words, then recognize them, then build short phrases.</p>
+              </div>
+              <button class="primary-button" id="start-next" type="button">Start next lesson</button>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="practice-view" aria-label="Practice">
+          <div class="practice-grid">
+            <article class="practice-card">
+              <span class="mini-label">Smart review</span>
+              <h2>Practice weak words</h2>
+              <p>Review words and phrases you missed, across every category.</p>
+              <button class="primary-button" id="review-missed" type="button">Review missed</button>
+            </article>
+            <article class="practice-card">
+              <span class="mini-label">Speed round</span>
+              <h2>Five quick words</h2>
+              <p>Earn XP with beginner-friendly word recognition.</p>
+              <button class="secondary-button" id="speed-round" type="button">Begin round</button>
+            </article>
+            <article class="practice-card">
+              <span class="mini-label">Typing</span>
+              <h2>Type the Spanish</h2>
+              <p>Practice spelling words and phrases from every category.</p>
+              <button class="secondary-button" id="typing-drill" type="button">Start typing</button>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="phrasebook-view" aria-label="Phrasebook">
+          <div class="phrasebook-tools">
+            <label class="search-box">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+              <input id="phrase-search" type="search" placeholder="Search Spanish or English" />
+            </label>
+          </div>
+          <div class="phrase-list" id="phrase-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="lesson-dialog" id="lesson-dialog" aria-labelledby="lesson-title">
+      <div class="lesson-card">
+        <div class="lesson-top">
+          <div>
+            <span class="mini-label" id="lesson-category">Sports Spanish</span>
+            <h2 id="lesson-title">Lesson</h2>
+          </div>
+          <button class="icon-button" id="close-lesson" type="button" title="Close lesson" aria-label="Close lesson">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+          </button>
+        </div>
+
+        <div class="lesson-options" aria-label="Lesson options">
+          <label>
+            <input type="checkbox" id="typing-toggle" />
+            Type answers
+          </label>
+          <label>
+            <input type="checkbox" id="mic-toggle" />
+            Mic checks
+          </label>
+        </div>
+
+        <div class="lesson-progress" aria-hidden="true"><span id="lesson-progress-fill"></span></div>
+
+        <div class="prompt-area">
+          <span class="prompt-kind" id="prompt-kind">Translate</span>
+          <h3 id="prompt-text">What does this mean?</h3>
+          <p id="prompt-hint"></p>
+        </div>
+
+        <div class="answer-zone" id="answer-zone"></div>
+
+        <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+
+        <div class="lesson-actions">
+          <button class="secondary-button" id="skip-question" type="button">Skip</button>
+          <button class="primary-button" id="check-answer" type="button">Check</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>
