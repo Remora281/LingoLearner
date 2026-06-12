@@ -564,6 +564,13 @@ function startLesson(categoryId, lessonIndex, customItems = null, customTitle = 
     gradedTotal: questions.filter((question) => question.type !== "study").length,
     points: 0,
     listening: false,
+    recognition: null,
+    speechQuestion: null,
+    speechStudyOnly: false,
+    latestTranscript: "",
+    finalTranscript: "",
+    speechConfidence: 0,
+    speechScored: false,
     transcript: ""
   };
   nodes.lessonCategory.textContent = category.name;
@@ -587,6 +594,12 @@ function renderQuestion() {
   session.built = [];
   session.checked = false;
   session.transcript = "";
+  session.latestTranscript = "";
+  session.finalTranscript = "";
+  session.speechConfidence = 0;
+  session.speechScored = false;
+  session.speechQuestion = null;
+  session.speechStudyOnly = false;
   nodes.feedback.className = "feedback";
   nodes.feedback.textContent = "";
   nodes.promptKind.textContent = question.kind;
@@ -617,7 +630,7 @@ function renderStudyQuestion(question) {
     <p>${question.item.english}</p>
     <div class="audio-actions">
       <button class="secondary-button speak-now" type="button">Hear it</button>
-      <button class="secondary-button say-now" type="button">Try saying it</button>
+      <button class="secondary-button say-now" type="button">Start saying</button>
     </div>
     <div class="speech-readout" aria-live="polite">
       <span>Live transcript</span>
@@ -697,7 +710,7 @@ function renderSayQuestion(question) {
   const panel = document.createElement("div");
   panel.className = "speech-panel";
   panel.innerHTML = `
-    <button class="primary-button listen-now" type="button">Start mic check</button>
+    <button class="primary-button listen-now" type="button">Start talking</button>
     <button class="secondary-button speak-now" type="button">Hear it first</button>
     <div class="speech-readout" aria-live="polite">
       <span>Live transcript</span>
@@ -735,6 +748,13 @@ function checkAnswer() {
   }
 
   const question = session.questions[session.index];
+
+  if (question.type === "say" && session.listening) {
+    stopSpeechCapture();
+    nodes.feedback.className = "feedback";
+    nodes.feedback.textContent = "Scoring what I heard...";
+    return;
+  }
 
   if (question.type === "study") {
     session.points += 2;
@@ -949,6 +969,7 @@ function listenForSpeech(question, studyOnly) {
 }
 
 function closeLesson() {
+  if (state.session?.listening) stopSpeechCapture();
   state.session = null;
   nodes.lessonDialog.close();
   renderApp();
@@ -961,6 +982,156 @@ function showView(viewName) {
 
 function capitalize(text) {
   return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function listenForSpeech(question, studyOnly) {
+  if (!SpeechRecognition) {
+    nodes.feedback.className = "feedback bad";
+    nodes.feedback.textContent = "Mic pronunciation checks are not available in this browser.";
+    return;
+  }
+
+  const session = state.session;
+  if (!session) return;
+
+  if (session.listening) {
+    stopSpeechCapture();
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "es-ES";
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+  recognition.continuous = true;
+
+  session.recognition = recognition;
+  session.speechQuestion = question;
+  session.speechStudyOnly = studyOnly;
+  session.latestTranscript = "";
+  session.finalTranscript = "";
+  session.speechConfidence = 0;
+  session.speechScored = false;
+  session.transcript = "";
+  session.listening = true;
+  updateSpeechButtons(true);
+
+  nodes.feedback.className = "feedback";
+  nodes.feedback.textContent = "Listening... tap Done talking when you finish.";
+  const live = document.querySelector(".speech-live");
+  const result = document.querySelector(".speech-result");
+  if (live) live.textContent = "Listening now...";
+  if (result) result.textContent = `Target: ${question.correct}`;
+
+  recognition.onresult = (event) => {
+    let interimTranscript = "";
+    let finalTranscript = "";
+    let confidence = 0;
+
+    for (let index = event.resultIndex; index < event.results.length; index += 1) {
+      const transcript = event.results[index][0].transcript.trim();
+      if (event.results[index].isFinal) {
+        finalTranscript += transcript;
+        confidence = event.results[index][0].confidence || 0;
+      } else {
+        interimTranscript += transcript;
+      }
+    }
+
+    const heardText = finalTranscript || interimTranscript;
+    if (!heardText) return;
+
+    session.latestTranscript = heardText;
+    if (finalTranscript) {
+      session.finalTranscript = finalTranscript;
+      session.speechConfidence = confidence;
+    }
+
+    if (live) live.textContent = heardText;
+    if (interimTranscript && result) result.textContent = "Keep speaking...";
+  };
+
+  recognition.onerror = () => {
+    session.listening = false;
+    session.recognition = null;
+    updateSpeechButtons(false);
+    nodes.feedback.className = "feedback bad";
+    nodes.feedback.textContent = "Mic check could not start. Your browser may need microphone permission.";
+  };
+
+  recognition.onend = () => {
+    scoreSpeechCapture();
+  };
+
+  recognition.start();
+}
+
+function stopSpeechCapture() {
+  const session = state.session;
+  if (!session || !session.listening) return;
+
+  session.listening = false;
+  updateSpeechButtons(false);
+
+  try {
+    session.recognition?.stop();
+  } catch {
+    scoreSpeechCapture();
+  }
+
+  window.setTimeout(scoreSpeechCapture, 250);
+}
+
+function scoreSpeechCapture() {
+  const session = state.session;
+  if (!session || !session.speechQuestion || session.speechScored) return;
+
+  const question = session.speechQuestion;
+  const heard = session.finalTranscript || session.latestTranscript;
+  const live = document.querySelector(".speech-live");
+  const result = document.querySelector(".speech-result");
+
+  session.speechScored = true;
+  session.listening = false;
+  session.recognition = null;
+  updateSpeechButtons(false);
+
+  if (!heard) {
+    nodes.feedback.className = "feedback bad";
+    nodes.feedback.textContent = "I did not hear enough to score. Try again and tap Done talking.";
+    if (live) live.textContent = "No speech captured.";
+    if (result) result.textContent = `Target: ${question.correct}`;
+    return;
+  }
+
+  session.transcript = heard;
+  if (live) live.textContent = heard;
+
+  const details = speechMatchDetails(heard, question.correct);
+  const score = Math.round(details.score * 100);
+  if (result) {
+    result.textContent = `Heard: ${heard} | Match: ${score}% | Confidence: ${Math.round(session.speechConfidence * 100)}%`;
+  }
+
+  nodes.feedback.className = details.matched ? "feedback good" : "feedback bad";
+  nodes.feedback.textContent = details.matched
+    ? "Pronunciation match accepted."
+    : `Not quite. Try for exactly: ${question.correct}`;
+
+  if (session.speechStudyOnly && details.matched) {
+    nodes.feedback.textContent = "Nice. You can move on when ready.";
+  }
+}
+
+function updateSpeechButtons(listening) {
+  document.querySelectorAll(".listen-now, .say-now").forEach((button) => {
+    button.classList.toggle("recording", listening);
+    if (listening) {
+      button.textContent = "Done talking";
+      return;
+    }
+    button.textContent = button.classList.contains("listen-now") ? "Start talking" : "Start saying";
+  });
 }
 
 nodes.navItems.forEach((button) => {

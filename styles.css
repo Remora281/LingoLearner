@@ -841,6 +841,12 @@ p {
   font-weight: 950;
 }
 
+.recording {
+  background: var(--coral) !important;
+  color: #fff !important;
+  box-shadow: 0 5px 0 #b83232 !important;
+}
+
 .speech-panel {
   padding: 16px;
   border: 2px solid #d9edf7;
